@@ -3,7 +3,7 @@
 </style></head><body><main><div class="brand">M</div><h1>Leltározó AI</h1><div class="tag">Saját mobilos leltár · fotó · javítható táblázat</div>
 <section class="panel"><h2>1. Készíts fotót</h2><input id="photo" type="file" accept="image/*" capture="environment"><img id="preview" alt="Kiválasztott leltárfotó"><p class="note">A fotó csak ezen az oldalon jelenik meg, nem töltődik fel automatikusan sehova. Az AI-számláláshoz külön elemeztetned kell a képet a ChatGPT-ben.</p><button class="btn" id="prompt">AI-számlálási utasítás másolása</button></section>
 <section class="panel"><h2>2. Leltártételek</h2><div class="row"><button class="btn secondary" id="add">+ Tétel hozzáadása</button><button class="btn secondary" id="csv">CSV letöltése</button></div><div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Tétel</th><th>Kategória</th><th>Db</th><th>Megjegyzés</th><th></th></tr></thead><tbody id="items"></tbody></table></div><p>Összes darab: <span class="total" id="total">0</span></p><p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében; frissítés után a mentés nem garantált.</p></section>
-<section class="panel"><h2>3. Automatikus AI Leltár</h2><p>Fotózd le a termékeket, és a Gemini AI azonnal kitölti a táblázatot!</p></section><script>
+<section class="panel"><h2>3. Automatikus AI Leltár</h2><p>Fotózd le a termékeket, és a Gemini AI azonnal kitölti a táblázatot!</p></section>
 // --- GEMINI API INTEGRÁCIÓ ---
   const API_KEY = "IDE_JÖN_A_SAJÁT_API_KULCSOD"; 
 
