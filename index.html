@@ -5,5 +5,66 @@
 <section class="panel"><h2>2. Leltártételek</h2><div class="row"><button class="btn secondary" id="add">+ Tétel hozzáadása</button><button class="btn secondary" id="csv">CSV letöltése</button></div><div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Tétel</th><th>Kategória</th><th>Db</th><th>Megjegyzés</th><th></th></tr></thead><tbody id="items"></tbody></table></div><p>Összes darab: <span class="total" id="total">0</span></p><p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében; frissítés után a mentés nem garantált.</p></section>
 <section class="panel"><h2>3. Ingyenes AI-elemzés</h2><ol><li>Nyomd meg a fenti gombot, és másold ki az utasítást.</li><li>Nyisd meg a ChatGPT-t, csatold a fotót, majd illeszd be az utasítást.</li><li>Az eredmény alapján töltsd ki a táblázatot.</li></ol><a href="https://chatgpt.com/" target="_blank" rel="noopener" class="btn">ChatGPT megnyitása</a><p class="note">Ez az ingyenes változat nem küld automatikusan fotót AI-nak és nem számol automatikusan. Ehhez külön, esetleg díjköteles AI-integráció szükséges.</p></section><footer>Nem hivatalos, személyes leltározó segédeszköz. Nem a McDonald’s hivatalos alkalmazása.</footer></main>
 <script>
+  // --- GEMINI API INTEGRÁCIÓ ---
+  const API_KEY = "AQ.Ab8RN6Ji7wSb4A39UP4AkuopO7N7lIoFVSrprzSGrOwrgMAdKg"; 
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const photoInput = document.getElementById('photo');
+
+    if (photoInput) {
+      photoInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Vizuális visszajelzés
+        alert("Kép elemzése a Gemini AI-val folyamatban...");
+
+        try {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = async () => {
+            const base64Data = reader.result.split(',')[1];
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: "Elemezd ezt a McDonald's raktári fotót! Számold meg a tételenként látható darabszámokat. A válaszodat KIZÁRÓLAG egy JSON tömb formájában add vissza, ahol minden elem egy objektum ezekkel a kulcsokkal: item (string, pl. 'Cold cup S'), quantity (szám). Példa: [{\"item\": \"Cold cup S\", \"quantity\": 12}]" },
+                    { inline_data: { mime_type: file.type, data: base64Data } }
+                  ]
+                }]
+              })
+            });
+
+            const data = await response.json();
+            const textResponse = data.candidates[0].content.parts[0].text;
+            const jsonString = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            const countedItems = JSON.parse(jsonString);
+
+            // Kitöltjük a meglévő rows tömböt vagy input mezőket
+            countedItems.forEach(result => {
+              if (typeof rows !== 'undefined') {
+                const found = rows.find(r => r[0].toLowerCase() === result.item.toLowerCase());
+                if (found) {
+                  found[2] = result.quantity; // Beírja a darabszámot
+                }
+              }
+            });
+
+            // Ha van renderelő függvény az oldalon, meghívjuk
+            if (typeof render === 'function') render();
+
+            alert("Sikeres AI leltározás! A darabszámok frissültek.");
+          };
+        } catch (err) {
+          console.error(err);
+          alert("Hiba történt az AI elemzés során!");
+        }
+      });
+    }
+  });
+  // --- INTEGRÁCIÓ VÉGE ---
 const categories=['Pohár','Fedő','Szívószál','Evőeszköz','Doboz','Zacskó','Szósz','Egyéb'];let rows=[['Cold cup S','Pohár','',''],['Cold cup M','Pohár','',''],['Cold cup L','Pohár','',''],['Hot cup / McCafé','Pohár','',''],['Moped / McDrive pohár','Pohár','',''],['Műanyag fedő','Fedő','',''],['Papír fedő','Fedő','',''],['Papír szívószál','Szívószál','',''],['Fa evőeszköz','Evőeszköz','',''],['Keverőpálca','Evőeszköz','',''],['Big Mac doboz','Doboz','',''],['McChicken doboz','Doboz','',''],['Nuggets doboz','Doboz','',''],['Papírzacskó','Zacskó','',''],['Tálcapapír','Egyéb','',''],['McFarm szósz','Szósz','',''],['Ketchup','Szósz','',''],['Majonéz','Szósz','',''],['Édes-savanyú szósz','Szósz','','']];const tbody=document.querySelector('#items');function render(){tbody.innerHTML='';rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;tbody.appendChild(tr)});tbody.querySelectorAll('[data-i]').forEach(el=>el.addEventListener('change',e=>{rows[+e.target.dataset.i][+e.target.dataset.c]=e.target.value;updateTotal()}));tbody.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{rows.splice(+el.dataset.del,1);render()}));updateTotal()}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function updateTotal(){document.querySelector('#total').textContent=rows.reduce((a,r)=>a+(Number(r[2])||0),0)}document.querySelector('#add').onclick=()=>{rows.push(['Új tétel','Egyéb','','']);render()};document.querySelector('#photo').onchange=e=>{const f=e.target.files[0];if(f){const img=document.querySelector('#preview');img.src=URL.createObjectURL(f);img.style.display='block'}};document.querySelector('#prompt').onclick=async()=>{const p='Elemezd a csatolt fotót McDonald’s éttermi leltárhoz. Azonosítsd a poharakat/fedőket, szívószálakat/evőeszközöket, dobozokat/zacskókat/tálcapapírt és szószokat. Rakásoknál becsüld meg a darabszámot a látható peremek/rétegek alapján, de a bizonytalan mennyiséget jelöld becslésként. Jelezd a bontatlan gyűjtőcsomagokat. Ne találj ki nem látható tételeket. Kizárólag táblázatot adj: Tétel | Kategória | Darabszám | Megjegyzés.';try{await navigator.clipboard.writeText(p);alert('Az utasítás a vágólapra került. Nyisd meg a ChatGPT-t, csatold a fotót, és illeszd be.')}catch{prompt('Másold ki ezt az utasítást:',p)}};document.querySelector('#csv').onclick=()=>{const data=[['Tétel','Kategória','Darabszám','Megjegyzés'],...rows.filter(r=>r[0].trim()).map(r=>r.map(x=>String(x??'')))];const csv='\uFEFF'+data.map(r=>r.map(x=>'"'+x.replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='leltar.csv';a.click();URL.revokeObjectURL(a.href)};render();
 </script></body></html>
