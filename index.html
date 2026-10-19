@@ -5,8 +5,20 @@
 <section class="panel"><h2>2. Leltártételek</h2><div class="row"><button class="btn secondary" id="add">+ Tétel hozzáadása</button><button class="btn secondary" id="csv">CSV letöltése</button></div><div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Tétel</th><th>Kategória</th><th>Db</th><th>Megjegyzés</th><th></th></tr></thead><tbody id="items"></tbody></table></div><p>Összes darab: <span class="total" id="total">0</span></p><p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében; frissítés után a mentés nem garantált.</p></section>
 <section class="panel"><h2>3. Automatikus AI Leltár</h2><p>Fotózd le a termékeket, és a Gemini AI azonnal kitölti a táblázatot!</p></section>
 <script>
-// --- GEMINI API INTEGRÁCIÓ (STABIL VÁLTOZAT) ---
-  const API_KEY = "AQ.Ab8RN6L05WUaqd529vMQ7Q-OGqkwzBCuInux3YTxBWcFgZoEng; 
+ <script>
+  // --- KATEGÓRIÁK ÉS TÉTELEK ---
+  const categories = ['Pohár', 'Fedő', 'Szívószál', 'Evőeszköz', 'Doboz', 'Zacskó', 'Szósz', 'Egyéb'];
+  
+  // Itt vannak a tételeid (ha van még több is, ide tudod őket felvenni)
+  let rows = [
+    ['Cold cup S', 'Pohár', '', ''],
+    ['Cold cup M', 'Pohár', '', ''],
+    ['Cold cup L', 'Pohár', '', ''],
+    ['Hot cup / McCafé', 'Pohár', '', '']
+  ];
+
+  // --- GEMINI API INTEGRÁCIÓ (STABIL) ---
+  const API_KEY = "AQ.Ab8RN6L05WUaqd529vMQ7Q-OGqkwzBCuInux3YTxBWcFgZoEng"; 
 
   document.addEventListener('DOMContentLoaded', () => {
     const photoInput = document.getElementById('photo');
@@ -16,11 +28,9 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        // Állapotjelző kiírása az oldalon (alert helyett)
         const noteElement = document.querySelector('.note') || document.body;
-        const originalText = noteElement.innerText;
         noteElement.innerText = "⏳ Kép elemzése a Gemini AI-val folyamatban, kérlek várj...";
-        noteElement.style.color = "#ffbc0d"; // Meki sárga szín
+        noteElement.style.color = "#ffbc0d";
 
         try {
           const reader = new FileReader();
@@ -52,7 +62,6 @@
               const jsonString = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
               const countedItems = JSON.parse(jsonString);
 
-              // Táblázat kitöltése
               if (typeof rows !== 'undefined') {
                 countedItems.forEach(result => {
                   const found = rows.find(r => r[0].toLowerCase() === result.item.toLowerCase());
@@ -65,7 +74,7 @@
               if (typeof render === 'function') render();
 
               noteElement.innerText = "✅ Sikeres AI leltározás!";
-              noteElement.style.color = "#00e676"; // Zöld szín
+              noteElement.style.color = "#00e676";
 
             } catch (innerErr) {
               console.error("Feldolgozási hiba:", innerErr);
@@ -81,5 +90,6 @@
       });
     }
   });
+</script>
 const categories=['Pohár','Fedő','Szívószál','Evőeszköz','Doboz','Zacskó','Szósz','Egyéb'];let rows=[['Cold cup S','Pohár','',''],['Cold cup M','Pohár','',''],['Cold cup L','Pohár','',''],['Hot cup / McCafé','Pohár','',''],['Moped / McDrive pohár','Pohár','',''],['Műanyag fedő','Fedő','',''],['Papír fedő','Fedő','',''],['Papír szívószál','Szívószál','',''],['Fa evőeszköz','Evőeszköz','',''],['Keverőpálca','Evőeszköz','',''],['Big Mac doboz','Doboz','',''],['McChicken doboz','Doboz','',''],['Nuggets doboz','Doboz','',''],['Papírzacskó','Zacskó','',''],['Tálcapapír','Egyéb','',''],['McFarm szósz','Szósz','',''],['Ketchup','Szósz','',''],['Majonéz','Szósz','',''],['Édes-savanyú szósz','Szósz','','']];const tbody=document.querySelector('#items');function render(){tbody.innerHTML='';rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;tbody.appendChild(tr)});tbody.querySelectorAll('[data-i]').forEach(el=>el.addEventListener('change',e=>{rows[+e.target.dataset.i][+e.target.dataset.c]=e.target.value;updateTotal()}));tbody.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{rows.splice(+el.dataset.del,1);render()}));updateTotal()}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function updateTotal(){document.querySelector('#total').textContent=rows.reduce((a,r)=>a+(Number(r[2])||0),0)}document.querySelector('#add').onclick=()=>{rows.push(['Új tétel','Egyéb','','']);render()};document.querySelector('#photo').onchange=e=>{const f=e.target.files[0];if(f){const img=document.querySelector('#preview');img.src=URL.createObjectURL(f);img.style.display='block'}};document.querySelector('#prompt').onclick=async()=>{const p='Elemezd a csatolt fotót McDonald’s éttermi leltárhoz. Azonosítsd a poharakat/fedőket, szívószálakat/evőeszközöket, dobozokat/zacskókat/tálcapapírt és szószokat. Rakásoknál becsüld meg a darabszámot a látható peremek/rétegek alapján, de a bizonytalan mennyiséget jelöld becslésként. Jelezd a bontatlan gyűjtőcsomagokat. Ne találj ki nem látható tételeket. Kizárólag táblázatot adj: Tétel | Kategória | Darabszám | Megjegyzés.';try{await navigator.clipboard.writeText(p);alert('Az utasítás a vágólapra került. Nyisd meg a ChatGPT-t, csatold a fotót, és illeszd be.')}catch{prompt('Másold ki ezt az utasítást:',p)}};document.querySelector('#csv').onclick=()=>{const data=[['Tétel','Kategória','Darabszám','Megjegyzés'],...rows.filter(r=>r[0].trim()).map(r=>r.map(x=>String(x??'')))];const csv='\uFEFF'+data.map(r=>r.map(x=>'"'+x.replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='leltar.csv';a.click();URL.revokeObjectURL(a.href)};render();
 </script></body></html>
