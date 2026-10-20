@@ -1,112 +1,195 @@
-<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071018"><title>Leltározó AI</title><style>
-:root{color-scheme:dark;--bg:#071018;--panel:#101e2a;--line:#243849;--yellow:#ffbc0d;--txt:#f4f7fa;--muted:#aab8c5}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#071018,#101d2a);color:var(--txt);font:16px system-ui,-apple-system,sans-serif;min-height:100vh}main{max-width:720px;margin:auto;padding:22px 16px 40px}.brand{font-size:42px;color:var(--yellow);font-weight:900;line-height:1}.tag{color:var(--muted);margin-top:8px}h1{font-size:28px;margin:12px 0 4px}h2{font-size:18px;margin:0 0 12px}.panel{background:#101e2a;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:16px}.btn{border:0;border-radius:13px;padding:13px 16px;background:var(--yellow);color:#111;font-weight:800;font-size:16px;cursor:pointer;display:inline-block;text-align:center}.btn.secondary{background:#203241;color:white;border:1px solid #355064}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}input,select{max-width:100%;background:#08131c;border:1px solid #365064;color:white;padding:10px;border-radius:10px;font:inherit}input[type=file]{width:100%}#preview{width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin-top:12px;display:none;background:#050b10}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted)}td input{width:100%;min-width:45px;padding:7px 4px}td:first-child input{min-width:110px}.note{font-size:13px;color:var(--muted);line-height:1.5}.total{font-size:22px;font-weight:800;color:var(--yellow)}.hidden{display:none}a{color:#ffd65e}footer{margin-top:18px;color:var(--muted);font-size:12px}
-</style></head><body><main><div class="brand">M</div><h1>Leltározó AI</h1><div class="tag">Saját mobilos leltár · fotó · javítható táblázat</div>
-<section class="panel"><h2>1. Készíts fotót</h2><input id="photo" type="file" accept="image/*" capture="environment"><img id="preview" alt="Kiválasztott leltárfotó"><p class="note" id="status-note">A fotó kiválasztása után az AI automatikusan elemzi a képet.</p><button class="btn hidden" id="prompt">AI-számlálási utasítás másolása</button></section>
-<section class="panel"><h2>2. Leltártételek</h2><div class="row"><button class="btn secondary" id="add">+ Tétel hozzáadása</button><button class="btn secondary" id="csv">CSV letöltése</button></div><div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Tétel</th><th>Kategória</th><th>Db</th><th>Megjegyzés</th><th></th></tr></thead><tbody id="items"></tbody></table></div><p>Összes darab: <span class="total" id="total">0</span></p><p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében.</p></section>
-<section class="panel"><h2>3. Automatikus AI Leltár</h2><p>Fotózd le a termékeket, és a Gemini AI azonnal kitölti a táblázatot!</p></section>
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071018">
+  <title>Leltározó AI</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071018;--panel:#101e2a;--line:#243849;--yellow:#ffbc0d;--txt:#f4f7fa;--muted:#aab8c5}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(160deg,#071018,#101d2a);color:var(--txt);font:16px system-ui,-apple-system,sans-serif;min-height:100vh}
+    main{max-width:720px;margin:auto;padding:22px 16px 40px}
+    .brand{font-size:42px;color:var(--yellow);font-weight:900;line-height:1}
+    .tag{color:var(--muted);margin-top:8px}
+    h1{font-size:28px;margin:12px 0 4px}
+    h2{font-size:18px;margin:0 0 12px}
+    .panel{background:#101e2a;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:16px}
+    .btn{border:0;border-radius:13px;padding:13px 16px;background:var(--yellow);color:#111;font-weight:800;font-size:16px;cursor:pointer;display:inline-block;text-align:center}
+    .btn.secondary{background:#203241;color:white;border:1px solid #355064}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,select{max-width:100%;background:#08131c;border:1px solid #365064;color:white;padding:10px;border-radius:10px;font:inherit}
+    input[type=file]{width:100%}
+    #preview{width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin-top:12px;display:none;background:#050b10}
+    table{border-collapse:collapse;width:100%;font-size:14px}
+    th,td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:left}
+    th{color:var(--muted)}
+    td input{width:100%;min-width:45px;padding:7px 4px}
+    td:first-child input{min-width:110px}
+    .note{font-size:13px;color:var(--muted);line-height:1.5}
+    .total{font-size:22px;font-weight:800;color:var(--yellow)}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">M</div>
+    <h1>Leltározó AI</h1>
+    <div class="tag">Saját mobilos leltár · fotó · javítható táblázat</div>
+    
+    <section class="panel">
+      <h2>1. Készíts fotót</h2>
+      <input id="photo" type="file" accept="image/*" capture="environment">
+      <img id="preview" alt="Kiválasztott leltárfotó">
+      <p class="note" id="status-note">A fotó kiválasztása után az AI automatikusan elemzi a képet.</p>
+    </section>
 
-<script>
-  const API_KEY = "AQ.Ab8RN6Ji7wSb4A39UP4AkuopO7N7lIoFVSrprzSGrOwrgMAdKg";
+    <section class="panel">
+      <h2>2. Leltártételek</h2>
+      <div class="row">
+        <button class="btn secondary" id="add">+ Tétel hozzáadása</button>
+        <button class="btn secondary" id="csv">CSV letöltése</button>
+      </div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Tétel</th><th>Kategória</th><th>Db</th><th>Megjegyzés</th><th></th></tr>
+          </thead>
+          <tbody id="items"></tbody>
+        </table>
+      </div>
+      <p>Összes darab: <span class="total" id="total">0</span></p>
+      <p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében.</p>
+    </section>
 
-  const categories=['Pohár','Fedő','Szívószál','Evőeszköz','Doboz','Zacskó','Szósz','Egyéb'];
-  let rows=[['Cold cup S','Pohár','',''],['Cold cup M','Pohár','',''],['Cold cup L','Pohár','',''],['Hot cup / McCafé','Pohár','',''],['Moped / McDrive pohár','Pohár','',''],['Műanyag fedő','Fedő','',''],['Papír fedő','Fedő','',''],['Papír szívószál','Szívószál','',''],['Fa evőeszköz','Evőeszköz','',''],['Keverőpálca','Evőeszköz','',''],['Big Mac doboz','Doboz','',''],['McChicken doboz','Doboz','',''],['Nuggets doboz','Doboz','',''],['Papírzacskó','Zacskó','',''],['Tálcapapír','Egyéb','',''],['McFarm szósz','Szósz','',''],['Ketchup','Szósz','',''],['Majonéz','Szósz','',''],['Édes-savanyú szósz','Szósz','','']];
-  
-  const tbody=document.querySelector('#items');
+    <section class="panel">
+      <h2>3. Automatikus AI Leltár</h2>
+      <p>Fotózd le a termékeket, és a Gemini AI azonnal kitölti a táblázatot!</p>
+    </section>
+  </main>
 
-  function render(){
-    tbody.innerHTML='';
-    rows.forEach((r,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;
-      tbody.appendChild(tr)
-    });
-    tbody.querySelectorAll('[data-i]').forEach(el=>el.addEventListener('change',e=>{rows[+e.target.dataset.i][+e.target.dataset.c]=e.target.value;updateTotal()}));
-    tbody.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{rows.splice(+el.dataset.del,1);render()}));
-    updateTotal();
-  }
+  <script>
+    const API_KEY = "AQ.Ab8RN6Ji7wSb4A39UP4AkuopO7N7lIoFVSrprzSGrOwrgMAdKg";
 
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  function updateTotal(){document.querySelector('#total').textContent=rows.reduce((a,r)=>a+(Number(r[2])||0),0)}
+    const categories = ['Pohár', 'Fedő', 'Szívószál', 'Evőeszköz', 'Doboz', 'Zacskó', 'Szósz', 'Egyéb'];
+    let rows = [
+      ['Cold cup S', 'Pohár', '', ''],
+      ['Cold cup M', 'Pohár', '', ''],
+      ['Cold cup L', 'Pohár', '', ''],
+      ['Hot cup / McCafé', 'Pohár', '', ''],
+      ['Moped / McDrive pohár', 'Pohár', '', ''],
+      ['Műanyag fedő', 'Fedő', '', ''],
+      ['Papír fedő', 'Fedő', '', ''],
+      ['Papír szívószál', 'Szívószál', '', ''],
+      ['Fa evőeszköz', 'Evőeszköz', '', ''],
+      ['Keverőpálca', 'Evőeszköz', '', ''],
+      ['Big Mac doboz', 'Doboz', '', ''],
+      ['McChicken doboz', 'Doboz', '', ''],
+      ['Nuggets doboz', 'Doboz', '', ''],
+      ['Papírzacskó', 'Zacskó', '', ''],
+      ['Tálcapapír', 'Egyéb', '', ''],
+      ['McFarm szósz', 'Szósz', '', ''],
+      ['Ketchup', 'Szósz', '', ''],
+      ['Majonéz', 'Szósz', '', ''],
+      ['Édes-savanyú szósz', 'Szósz', '', '']
+    ];
+    
+    const tbody = document.querySelector('#items');
 
-  document.querySelector('#add').onclick=()=>{rows.push(['Új tétel','Egyéb','','']);render()};
-
-  // --- GEMINI AI INTEGRÁCIÓ ÉS FOTÓ FELTÖLTÉS ---
-  document.querySelector('#photo').onchange = async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-
-    // Kép előnézet
-    const img = document.querySelector('#preview');
-    img.src = URL.createObjectURL(f);
-    img.style.display = 'block';
-
-    const statusNote = document.querySelector('#status-note');
-    statusNote.innerText = "⏳ Kép elemzése a Gemini AI-val folyamatban, kérlek várj...";
-    statusNote.style.color = "#ffbc0d";
-
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(f);
-      reader.onload = async () => {
-        try {
-          const base64Data = reader.result.split(',')[1];
-
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: "Elemezd ezt a McDonald's raktári fotót! Számold meg a tételenként látható darabszámokat. A válaszodat KIZÁRÓLAG egy JSON tömb formájában add vissza, markdown megjelölés nélkül, ahol minden elem egy objektum ezekkel a kulcsokkal: item (string), quantity (szám). Példa: [{\"item\": \"Cold cup S\", \"quantity\": 12}]" },
-                  { inline_data: { mime_type: f.type, data: base64Data } }
-                ]
-              }]
-            })
-          });
-
-          const data = await response.json();
-
-          if (data.error) {
-            throw new Error(data.error.message || "API hiba");
-          }
-
-          const textResponse = data.candidates[0].content.parts[0].text;
-          const jsonString = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-          const countedItems = JSON.parse(jsonString);
-
-          countedItems.forEach(result => {
-            const found = rows.find(r => r[0].toLowerCase() === result.item.toLowerCase());
-            if (found) {
-              found[2] = result.quantity;
-            }
-          });
-
-          render();
-          statusNote.innerText = "✅ Sikeres AI leltározás!";
-          statusNote.style.color = "#00e676";
-
-        } catch (innerErr) {
-          console.error(innerErr);
-          statusNote.innerText = "❌ AI Hiba: " + innerErr.message;
-          statusNote.style.color = "#ff5252";
-        }
-      };
-    } catch (err) {
-      console.error(err);
-      statusNote.innerText = "❌ Hiba történt a kép beolvasásakor!";
-      statusNote.style.color = "#ff5252";
+    function render(){
+      tbody.innerHTML = '';
+      rows.forEach((r,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('[data-i]').forEach(el=>el.addEventListener('change',e=>{rows[+e.target.dataset.i][+e.target.dataset.c]=e.target.value;updateTotal()}));
+      tbody.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{rows.splice(+el.dataset.del,1);render()}));
+      updateTotal();
     }
-  };
 
-  document.querySelector('#csv').onclick=()=>{
-    const data=[['Tétel','Kategória','Darabszám','Megjegyzés'],...rows.filter(r=>r[0].trim()).map(r=>r.map(x=>String(x??'')))];
-    const csv='\uFEFF'+data.map(r=>r.map(x=>'"'+x.replace(/"/g,'""')+'"').join(';')).join('\r\n');
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-    a.download='leltar.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
+    function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    function updateTotal(){document.querySelector('#total').textContent=rows.reduce((a,r)=>a+(Number(r[2])||0),0)}
 
-  render();
-</script></body></html>
+    document.querySelector('#add').onclick = () => { rows.push(['Új tétel', 'Egyéb', '', '']); render(); };
+
+    document.querySelector('#photo').onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+
+      const img = document.querySelector('#preview');
+      img.src = URL.createObjectURL(f);
+      img.style.display = 'block';
+
+      const statusNote = document.querySelector('#status-note');
+      statusNote.innerText = "⏳ Kép elemzése a Gemini AI-val folyamatban, kérlek várj...";
+      statusNote.style.color = "#ffbc0d";
+
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(f);
+        reader.onload = async () => {
+          try {
+            const base64Data = reader.result.split(',')[1];
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: "Elemezd ezt a McDonald's raktári fotót! Számold meg a tételenként látható darabszámokat. A válaszodat KIZÁRÓLAG egy JSON tömb formájában add vissza, markdown megjelölés nélkül, ahol minden elem egy objektum ezekkel a kulcsokkal: item (string), quantity (szám). Példa: [{\"item\": \"Cold cup S\", \"quantity\": 12}]" },
+                    { inline_data: { mime_type: f.type, data: base64Data } }
+                  ]
+                }]
+              })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+              throw new Error(data.error.message || "API hiba");
+            }
+
+            const textResponse = data.candidates[0].content.parts[0].text;
+            const jsonString = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            const countedItems = JSON.parse(jsonString);
+
+            countedItems.forEach(result => {
+              const found = rows.find(r => r[0].toLowerCase() === result.item.toLowerCase());
+              if (found) {
+                found[2] = result.quantity;
+              }
+            });
+
+            render();
+            statusNote.innerText = "✅ Sikeres AI leltározás!";
+            statusNote.style.color = "#00e676";
+
+          } catch (innerErr) {
+            console.error(innerErr);
+            statusNote.innerText = "❌ AI Hiba: " + innerErr.message;
+            statusNote.style.color = "#ff5252";
+          }
+        };
+      } catch (err) {
+        console.error(err);
+        statusNote.innerText = "❌ Hiba történt a kép beolvasásakor!";
+        statusNote.style.color = "#ff5252";
+      }
+    };
+
+    document.querySelector('#csv').onclick = () => {
+      const data = [['Tétel', 'Kategória', 'Darabszám', 'Megjegyzés'], ...rows.filter(r => r[0].trim()).map(r => r.map(x => String(x ?? '')))];
+      const csv = '\uFEFF' + data.map(r => r.map(x => '"' + x.replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = 'leltar.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    render();
+  </script>
+</body>
+</html>
