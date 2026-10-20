@@ -19,7 +19,6 @@
     .btn.secondary{background:#203241;color:white;border:1px solid #355064}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     input,select{max-width:100%;background:#08131c;border:1px solid #365064;color:white;padding:10px;border-radius:10px;font:inherit}
-    input[type=file]{width:100%}
     #preview{width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin-top:12px;display:none;background:#050b10}
     table{border-collapse:collapse;width:100%;font-size:14px}
     th,td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:left}
@@ -28,7 +27,7 @@
     td:first-child input{min-width:110px}
     .note{font-size:13px;color:var(--muted);line-height:1.5}
     .total{font-size:22px;font-weight:800;color:var(--yellow)}
-    .hidden{display:none}
+    .hidden{display:none !important}
   </style>
 </head>
 <body>
@@ -37,16 +36,14 @@
     <h1>Leltározó AI</h1>
     <div class="tag">Saját mobilos leltár · fotó · javítható táblázat</div>
     
-    <<section class="panel">
+    <section class="panel">
       <h2>1. Készíts vagy válassz fotót</h2>
       <div class="row" style="margin-bottom: 12px;">
-        <!-- Élő kamera nyitása -->
         <label for="photo-camera" class="btn" style="flex:1; cursor:pointer;">
           📸 Fotó készítése
         </label>
         <input id="photo-camera" type="file" accept="image/*" capture="environment" class="hidden">
 
-        <!-- Galéria / Fájlok megnyitása -->
         <label for="photo-gallery" class="btn secondary" style="flex:1; cursor:pointer;">
           🖼️ Galéria / Fájlok
         </label>
@@ -54,7 +51,7 @@
       </div>
 
       <img id="preview" alt="Kiválasztott leltárfotó">
-      <p class="note" id="status-note">Válassz ki egy meglévő fotót a galériából, vagy készíts újat a kamerával!</p>
+      <p class="note" id="status-note">Válassz ki egy fotót a galériából, vagy készíts újat a kamerával!</p>
     </section>
 
     <section class="panel">
@@ -126,12 +123,11 @@
 
     document.querySelector('#add').onclick = () => { rows.push(['Új tétel', 'Egyéb', '', '']); render(); };
 
-    document.querySelector('#photo').onchange = async (e) => {
-      const f = e.target.files[0];
-      if (!f) return;
+    async function processPhoto(file) {
+      if (!file) return;
 
       const img = document.querySelector('#preview');
-      img.src = URL.createObjectURL(f);
+      img.src = URL.createObjectURL(file);
       img.style.display = 'block';
 
       const statusNote = document.querySelector('#status-note');
@@ -140,7 +136,7 @@
 
       try {
         const reader = new FileReader();
-        reader.readAsDataURL(f);
+        reader.readAsDataURL(file);
         reader.onload = async () => {
           try {
             const base64Data = reader.result.split(',')[1];
@@ -152,7 +148,7 @@
                 contents: [{
                   parts: [
                     { text: "Elemezd ezt a McDonald's raktári fotót! Számold meg a tételenként látható darabszámokat. A válaszodat KIZÁRÓLAG egy JSON tömb formájában add vissza, markdown megjelölés nélkül, ahol minden elem egy objektum ezekkel a kulcsokkal: item (string), quantity (szám). Példa: [{\"item\": \"Cold cup S\", \"quantity\": 12}]" },
-                    { inline_data: { mime_type: f.type, data: base64Data } }
+                    { inline_data: { mime_type: file.type, data: base64Data } }
                   ]
                 }]
               })
@@ -190,7 +186,10 @@
         statusNote.innerText = "❌ Hiba történt a kép beolvasásakor!";
         statusNote.style.color = "#ff5252";
       }
-    };
+    }
+
+    document.querySelector('#photo-camera').onchange = (e) => processPhoto(e.target.files[0]);
+    document.querySelector('#photo-gallery').onchange = (e) => processPhoto(e.target.files[0]);
 
     document.querySelector('#csv').onclick = () => {
       const data = [['Tétel', 'Kategória', 'Darabszám', 'Megjegyzés'], ...rows.filter(r => r[0].trim()).map(r => r.map(x => String(x ?? '')))];
