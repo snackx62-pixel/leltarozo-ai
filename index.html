@@ -37,11 +37,24 @@
     <h1>Leltározó AI</h1>
     <div class="tag">Saját mobilos leltár · fotó · javítható táblázat</div>
     
-    <section class="panel">
-      <h2>1. Készíts fotót</h2>
-      <input id="photo" type="file" accept="image/*">
+    <<section class="panel">
+      <h2>1. Készíts vagy válassz fotót</h2>
+      <div class="row" style="margin-bottom: 12px;">
+        <!-- Élő kamera nyitása -->
+        <label for="photo-camera" class="btn" style="flex:1; cursor:pointer;">
+          📸 Fotó készítése
+        </label>
+        <input id="photo-camera" type="file" accept="image/*" capture="environment" class="hidden">
+
+        <!-- Galéria / Fájlok megnyitása -->
+        <label for="photo-gallery" class="btn secondary" style="flex:1; cursor:pointer;">
+          🖼️ Galéria / Fájlok
+        </label>
+        <input id="photo-gallery" type="file" accept="image/*" class="hidden">
+      </div>
+
       <img id="preview" alt="Kiválasztott leltárfotó">
-      <p class="note" id="status-note">A fotó kiválasztása után az AI automatikusan elemzi a képet.</p>
+      <p class="note" id="status-note">Válassz ki egy meglévő fotót a galériából, vagy készíts újat a kamerával!</p>
     </section>
 
     <section class="panel">
