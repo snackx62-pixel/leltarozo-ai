@@ -19,6 +19,7 @@
     .btn.secondary{background:#203241;color:white;border:1px solid #355064}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     input,select{max-width:100%;background:#08131c;border:1px solid #365064;color:white;padding:10px;border-radius:10px;font:inherit}
+    input[type=file]{width:100%; cursor:pointer; margin-top:8px;}
     #preview{width:100%;max-height:420px;object-fit:contain;border-radius:12px;margin-top:12px;display:none;background:#050b10}
     table{border-collapse:collapse;width:100%;font-size:14px}
     th,td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:left}
@@ -27,7 +28,6 @@
     td:first-child input{min-width:110px}
     .note{font-size:13px;color:var(--muted);line-height:1.5}
     .total{font-size:22px;font-weight:800;color:var(--yellow)}
-    .hidden{display:none !important}
   </style>
 </head>
 <body>
@@ -38,20 +38,9 @@
     
     <section class="panel">
       <h2>1. Készíts vagy válassz fotót</h2>
-      <div class="row" style="margin-bottom: 12px;">
-        <label for="photo-camera" class="btn" style="flex:1; cursor:pointer;">
-          📸 Fotó készítése
-        </label>
-        <input id="photo-camera" type="file" accept="image/*" capture="environment" class="hidden">
-
-        <label for="photo-gallery" class="btn secondary" style="flex:1; cursor:pointer;">
-          🖼️ Galéria / Fájlok
-        </label>
-        <input id="photo-gallery" type="file" accept="image/*" class="hidden">
-      </div>
-
+      <input id="photo" type="file" accept="image/*">
       <img id="preview" alt="Kiválasztott leltárfotó">
-      <p class="note" id="status-note">Válassz ki egy fotót a galériából, vagy készíts újat a kamerával!</p>
+      <p class="note" id="status-note">Válassz ki egy meglévő fotót a galériából, vagy készíts újat!</p>
     </section>
 
     <section class="panel">
@@ -123,7 +112,9 @@
 
     document.querySelector('#add').onclick = () => { rows.push(['Új tétel', 'Egyéb', '', '']); render(); };
 
-    async function processPhoto(file) {
+    // Fénykép / Galéria kezelés és Gemini AI hívás
+    document.querySelector('#photo').onchange = async (e) => {
+      const file = e.target.files[0];
       if (!file) return;
 
       const img = document.querySelector('#preview');
@@ -186,10 +177,7 @@
         statusNote.innerText = "❌ Hiba történt a kép beolvasásakor!";
         statusNote.style.color = "#ff5252";
       }
-    }
-
-    document.querySelector('#photo-camera').onchange = (e) => processPhoto(e.target.files[0]);
-    document.querySelector('#photo-gallery').onchange = (e) => processPhoto(e.target.files[0]);
+    };
 
     document.querySelector('#csv').onclick = () => {
       const data = [['Tétel', 'Kategória', 'Darabszám', 'Megjegyzés'], ...rows.filter(r => r[0].trim()).map(r => r.map(x => String(x ?? '')))];
