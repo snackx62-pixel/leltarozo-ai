@@ -69,7 +69,7 @@
         </table>
       </div>
       <p>Összes darab: <span class="total" id="total">0</span></p>
-      <p class="note">A táblázatot kézzel is szerkesztheted. Az adatok ezen a készüléken maradnak a böngésző munkamenetében.</p>
+      <p class="note">A táblázatot kézzel is szerkesztheted. Az AI automatikusan hozzáadja az újonnan felismert tételeket is.</p>
     </section>
 
     <section class="panel">
@@ -81,27 +81,26 @@
   <script>
     const API_KEY = "AQ.Ab8RN6I6t4P-Ag8CKX5ctshLqpuey94GkQKttqrz1BVZ8MQ";
 
-    const categories = ['Pohár', 'Fedő', 'Szívószál', 'Evőeszköz', 'Doboz', 'Zacskó', 'Szósz', 'Egyéb'];
+    const categories = ['Hús', 'Szósz', 'Pohár', 'Fedő', 'Szívószál', 'Evőeszköz', 'Doboz', 'Zacskó', 'Tejszínhab', 'Egyéb'];
     let rows = [
+      ['10:1 hús', 'Hús', '', ''],
+      ['4:1 hús', 'Hús', '', ''],
+      ['3:1 hús', 'Hús', '', ''],
+      ['Sertés hús', 'Hús', '', ''],
+      ['Crispy csirke', 'Hús', '', ''],
+      ['Value csirke', 'Hús', '', ''],
+      ['Big Tasty szósz', 'Szósz', '', ''],
+      ['Big Mac szósz', 'Szósz', '', ''],
+      ['Mustár Deluxe szósz', 'Szósz', '', ''],
+      ['Chargrill szósz', 'Szósz', '', ''],
+      ['Ketchup', 'Szósz', '', ''],
+      ['Majonéz', 'Szósz', '', ''],
+      ['Tejszínhab spray/flakon', 'Tejszínhab', '', ''],
       ['Cold cup S', 'Pohár', '', ''],
       ['Cold cup M', 'Pohár', '', ''],
       ['Cold cup L', 'Pohár', '', ''],
-      ['Hot cup / McCafé', 'Pohár', '', ''],
-      ['Moped / McDrive pohár', 'Pohár', '', ''],
-      ['Műanyag fedő', 'Fedő', '', ''],
-      ['Papír fedő', 'Fedő', '', ''],
-      ['Papír szívószál', 'Szívószál', '', ''],
-      ['Fa evőeszköz', 'Evőeszköz', '', ''],
-      ['Keverőpálca', 'Evőeszköz', '', ''],
       ['Big Mac doboz', 'Doboz', '', ''],
-      ['McChicken doboz', 'Doboz', '', ''],
-      ['Nuggets doboz', 'Doboz', '', ''],
-      ['Papírzacskó', 'Zacskó', '', ''],
-      ['Tálcapapír', 'Egyéb', '', ''],
-      ['McFarm szósz', 'Szósz', '', ''],
-      ['Ketchup', 'Szósz', '', ''],
-      ['Majonéz', 'Szósz', '', ''],
-      ['Édes-savanyú szósz', 'Szósz', '', '']
+      ['Papírzacskó', 'Zacskó', '', '']
     ];
     
     const tbody = document.querySelector('#items');
@@ -109,8 +108,8 @@
     function render(){
       tbody.innerHTML = '';
       rows.forEach((r,i)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><input aria-label="Tétel" value="${esc(r[0])}" data-i="${i}" data-c="0"></td><td><select data-i="${i}" data-c="1">${categories.map(c=>`<option ${r[1]===c?'selected':''}>${c}</option>`).join('')}</select></td><td><input aria-label="Darabszám" type="number" min="0" inputmode="numeric" value="${esc(r[2])}" data-i="${i}" data-c="2"></td><td><input aria-label="Megjegyzés" value="${esc(r[3])}" data-i="${i}" data-c="3"></td><td><button class="btn secondary" data-del="${i}" aria-label="Sor törlése">×</button></td>`;
         tbody.appendChild(tr);
       });
       tbody.querySelectorAll('[data-i]').forEach(el=>el.addEventListener('change',e=>{rows[+e.target.dataset.i][+e.target.dataset.c]=e.target.value;updateTotal()}));
@@ -141,4 +140,72 @@
           try {
             const base64Data = reader.result.split(',')[1];
 
-            const response = await fetch(`
+            const promptText = "Elemezd ezt a McDonald's raktári fotót! Számold meg a tételenként látható darabszámokat. Felismerhetsz húsokat (pl. 10:1, 4:1, 3:1, sertés, crispy, value), szószokat (Big Tasty, Big Mac, mustár deluxe, chargrill, ketchup, stb.), tejszínhabot, dobozokat, poharakat és minden egyéb raktári árut. A válaszodat KIZÁRÓLAG egy JSON tömb formájában add vissza, markdown megjelölés nélkül, ahol minden elem egy objektum ezekkel a kulcsokkal: item (string, a termék pontos neve), category (string, a kategóriája pl. Hús, Szósz, Tejszínhab, Pohár, Doboz, Egyéb), quantity (szám). Példa: [{\"item\": \"10:1 hús\", \"category\": \"Hús\", \"quantity\": 25}]";
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: promptText },
+                    { inline_data: { mime_type: file.type, data: base64Data } }
+                  ]
+                }]
+              })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+              throw new Error(data.error.message || "API hiba");
+            }
+
+            const textResponse = data.candidates[0].content.parts[0].text;
+            const jsonString = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            const countedItems = JSON.parse(jsonString);
+
+            // Ha az AI olyan tételt talált, ami a listában van, frissíti; ha újat talált, automatikusan hozzáadja!
+            countedItems.forEach(result => {
+              const found = rows.find(r => r[0].toLowerCase() === result.item.toLowerCase());
+              if (found) {
+                found[2] = result.quantity;
+              } else {
+                rows.push([result.item, result.category || 'Egyéb', result.quantity, 'AI által felismerve']);
+              }
+            });
+
+            render();
+            statusNote.innerText = "✅ Sikeres AI leltározás! Új tételek is hozzáadva.";
+            statusNote.style.color = "#00e676";
+
+          } catch (innerErr) {
+            console.error(innerErr);
+            statusNote.innerText = "❌ AI Hiba: " + innerErr.message;
+            statusNote.style.color = "#ff5252";
+          }
+        };
+      } catch (err) {
+        console.error(err);
+        statusNote.innerText = "❌ Hiba történt a kép beolvasásakor!";
+        statusNote.style.color = "#ff5252";
+      }
+    }
+
+    document.querySelector('#photo-camera').onchange = (e) => processPhoto(e.target.files[0]);
+    document.querySelector('#photo-gallery').onchange = (e) => processPhoto(e.target.files[0]);
+
+    document.querySelector('#csv').onclick = () => {
+      const data = [['Tétel', 'Kategória', 'Darabszám', 'Megjegyzés'], ...rows.filter(r => r[0].trim()).map(r => r.map(x => String(x ?? '')))];
+      const csv = '\uFEFF' + data.map(r => r.map(x => '"' + x.replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = 'leltar.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    render();
+  </script>
+</body>
+</html>
