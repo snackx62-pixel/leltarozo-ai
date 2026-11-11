@@ -1,4 +1,4 @@
-const CACHE='leltar-pro-2-0-v1';
+const CACHE='leltar-pro-3-0-v1';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES.filter(x=>x!=='./index.html'))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
